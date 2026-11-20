@@ -1,0 +1,20 @@
+# قائمة ملفات الكتب التي تستوردها قاعدة البيانات تلقائيًا (سطر لكل ملف).
+# تفحص قاعدة البيانات هذه القائمة كل دقيقة، وتستورد كل رابط جديد لم يُستورد من قبل.
+https://raw.githubusercontent.com/AlaBasirah/AlaBasirah.github.io/6f9efa0a37a27942754f164bf801140bd662f807/tz-01.json
+https://raw.githubusercontent.com/AlaBasirah/AlaBasirah.github.io/6f9efa0a37a27942754f164bf801140bd662f807/tz-02.json
+https://raw.githubusercontent.com/AlaBasirah/AlaBasirah.github.io/6f9efa0a37a27942754f164bf801140bd662f807/tz-03.json
+https://raw.githubusercontent.com/AlaBasirah/AlaBasirah.github.io/6f9efa0a37a27942754f164bf801140bd662f807/tz-04.json
+https://raw.githubusercontent.com/AlaBasirah/AlaBasirah.github.io/6f9efa0a37a27942754f164bf801140bd662f807/tz-05.json
+https://raw.githubusercontent.com/AlaBasirah/AlaBasirah.github.io/6f9efa0a37a27942754f164bf801140bd662f807/tz-06.json
+https://raw.githubusercontent.com/AlaBasirah/AlaBasirah.github.io/6f9efa0a37a27942754f164bf801140bd662f807/tz-07.json
+https://raw.githubusercontent.com/AlaBasirah/AlaBasirah.github.io/6f9efa0a37a27942754f164bf801140bd662f807/tz-08.json
+https://raw.githubusercontent.com/AlaBasirah/AlaBasirah.github.io/6f9efa0a37a27942754f164bf801140bd662f807/tz-09.json
+https://raw.githubusercontent.com/AlaBasirah/AlaBasirah.github.io/6f9efa0a37a27942754f164bf801140bd662f807/tz-10.json
+https://raw.githubusercontent.com/AlaBasirah/AlaBasirah.github.io/6f9efa0a37a27942754f164bf801140bd662f807/tz-11.json
+https://raw.githubusercontent.com/AlaBasirah/AlaBasirah.github.io/6f9efa0a37a27942754f164bf801140bd662f807/tz-12.json
+https://raw.githubusercontent.com/AlaBasirah/AlaBasirah.github.io/6f9efa0a37a27942754f164bf801140bd662f807/tz-13.json
+https://raw.githubusercontent.com/AlaBasirah/AlaBasirah.github.io/6f9efa0a37a27942754f164bf801140bd662f807/tz-14.json
+https://raw.githubusercontent.com/AlaBasirah/AlaBasirah.github.io/6f9efa0a37a27942754f164bf801140bd662f807/tz-15.json
+https://raw.githubusercontent.com/AlaBasirah/AlaBasirah.github.io/6f9efa0a37a27942754f164bf801140bd662f807/tz-16.json
+https://raw.githubusercontent.com/AlaBasirah/AlaBasirah.github.io/6f9efa0a37a27942754f164bf801140bd662f807/tz-17.json
+https://raw.githubusercontent.com/AlaBasirah/AlaBasirah.github.io/6f9efa0a37a27942754f164bf801140bd662f807/tz-18.json

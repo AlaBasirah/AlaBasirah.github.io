@@ -1,0 +1,69 @@
+# يبني قاعدة معرفة الكتب: ينزّل كل كتاب من Google Drive، ويستخرج نصه (مع التعرف الضوئي
+# للصفحات التالفة)، ثم يحفظ النتائج في فرع ingest-data لتُستورد إلى قاعدة البيانات.
+name: build-books
+on:
+  workflow_dispatch:
+  push:
+    branches: [ingest]
+permissions:
+  contents: write
+concurrency: { group: build-books, cancel-in-progress: false }
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.m.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: m
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          rows = []
+          for i, line in enumerate(open("tools/books-ibn-alqayyim.tsv", encoding="utf-8")):
+              if line.strip():
+                  fid, name = line.rstrip("\n").split("\t")[:2]
+                  rows.append({"i": f"{i+1:02d}", "id": fid, "name": name})
+          print("matrix=" + json.dumps({"include": rows}, ensure_ascii=False))
+          PY
+  build:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix: ${{ fromJson(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq poppler-utils tesseract-ocr tesseract-ocr-ara >/dev/null
+          pip install -q gdown pypdf
+      - name: Download
+        run: gdown --quiet "https://drive.google.com/uc?id=${{ matrix.id }}" -O book.pdf
+      - name: Build
+        run: |
+          mkdir -p out
+          python3 tools/build_book.py book.pdf "${{ matrix.name }}" "ابن القيم" "out/aq-${{ matrix.i }}.json" | tee "out/aq-${{ matrix.i }}.log"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aq-${{ matrix.i }}
+          path: out/
+  publish:
+    needs: build
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { path: parts }
+      - name: Commit to ingest-data branch
+        run: |
+          mkdir -p data && find parts -name '*.json' -exec cp {} data/ \; && find parts -name '*.log' -exec cat {} \; > data/report.jsonl
+          cd data
+          git init -q -b ingest-data
+          git config user.name "Basira"
+          git config user.email "basira@users.noreply.github.com"
+          git add -A && git commit -q -m "بيانات الكتب"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" ingest-data

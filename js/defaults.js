@@ -72,7 +72,7 @@ export const DEFAULT_SITE = {
 
 export const DEFAULT_SERVER = {
   provider: "gemini",
-  model: "gemini-3.8-flash",
+  model: "gemini-3.5-flash-lite",
   extra_instructions: "",
   not_found_message: "",
   top_k: 12,

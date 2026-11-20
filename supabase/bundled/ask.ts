@@ -137,7 +137,7 @@ function toGeminiSchema(s: Record<string, unknown>): Record<string, unknown> {
   return out;
 }
 
-const GEMINI_FALLBACKS = ["gemini-3.8-flash", "gemini-3.6-flash", "gemini-3.5-flash-lite"];
+const GEMINI_FALLBACKS = ["gemini-3.5-flash-lite", "gemini-3.6-flash", "gemini-3.8-flash"];
 
 /**
  * يجرب النموذج المختار، فإن كان مزدحمًا أو بطيئًا انتقل تلقائيًا إلى نموذج مجاني آخر.
@@ -178,7 +178,7 @@ async function geminiOnce<T>(opts: AIOpts, model: string, lowThinking: boolean):
   const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
     method: "POST",
     headers: { "x-goog-api-key": key, "content-type": "application/json" },
-    signal: AbortSignal.timeout(Number(Deno.env.get("AI_TIMEOUT_MS") ?? "30000")),
+    signal: AbortSignal.timeout(Number(Deno.env.get("AI_TIMEOUT_MS") ?? "20000")),
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: opts.system }] },
       contents: [{ role: "user", parts: [{ text: opts.user }] }],
@@ -335,8 +335,6 @@ Deno.serve(async (req) => {
         maxTokens: 2500,
       });
     }
-
-    console.log(JSON.stringify({ step: "diag", terms, hits: passages.length, found: result.found, cited: result.cited, refsInText: (result.answer ?? "").match(/\[\d+\]/g) }));
 
     // 3) تحقق صارم: لا إجابة بلا إحالات صحيحة إلى المقاطع
     const valid = new Set(passages.map((_, i) => i + 1));

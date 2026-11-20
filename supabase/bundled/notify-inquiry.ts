@@ -137,44 +137,52 @@ function toGeminiSchema(s: Record<string, unknown>): Record<string, unknown> {
   return out;
 }
 
-const GEMINI_FALLBACKS = ["gemini-3.8-flash", "gemini-3.6-flash", "gemini-3.5-flash-lite"];
+const GEMINI_FALLBACKS = ["gemini-3.5-flash-lite", "gemini-3.6-flash", "gemini-3.8-flash"];
 
-/** يجرب النموذج المختار، فإن كان مزدحمًا انتقل تلقائيًا إلى النماذج المجانية الأخرى */
+/**
+ * يجرب النموذج المختار، فإن كان مزدحمًا أو بطيئًا انتقل تلقائيًا إلى نموذج مجاني آخر.
+ * لكل محاولة حد زمني حتى لا ينتظر الزائر بلا نهاية.
+ */
 async function callGemini<T>(opts: AIOpts): Promise<T> {
   const first = opts.model && !opts.model.startsWith("claude") ? opts.model : (Deno.env.get("GEMINI_MODEL") || GEMINI_FALLBACKS[0]);
-  const models = [first, ...GEMINI_FALLBACKS.filter((m) => m !== first)];
+  const models = [first, ...GEMINI_FALLBACKS.filter((m) => m !== first)].slice(0, 3);
   let lastErr: unknown = null;
   for (const model of models) {
-    for (let attempt = 0; attempt < 2; attempt++) {
-      try {
-        return await geminiOnce<T>(opts, model);
-      } catch (e) {
-        lastErr = e;
-        const msg = String(e);
-        const transient = /Gemini API (429|500|502|503|504)|quota|fetch failed|timed out/i.test(msg);
-        if (!transient) throw e;
-        await new Promise((r) => setTimeout(r, 600 * (attempt + 1)));
+    try {
+      return await geminiOnce<T>(opts, model, true);
+    } catch (e) {
+      lastErr = e;
+      const msg = String(e);
+      if (/Gemini API 400/.test(msg) && /thinking/i.test(msg)) {
+        try { return await geminiOnce<T>(opts, model, false); } catch (e2) { lastErr = e2; }
+        continue;
       }
+      const transient = /Gemini API (429|500|502|503|504)|quota|fetch failed|timed out|TimeoutError|aborted|no structured output|JSON/i.test(msg);
+      console.warn(`gemini ${model} failed: ${msg.slice(0, 200)}`);
+      if (!transient) throw e;
     }
   }
-  throw new Error(`Gemini quota exceeded or unavailable: ${String(lastErr)}`);
+  throw new Error(`Gemini quota exceeded or unavailable: ${String(lastErr).slice(0, 300)}`);
 }
 
-async function geminiOnce<T>(opts: AIOpts, model: string): Promise<T> {
+async function geminiOnce<T>(opts: AIOpts, model: string, lowThinking: boolean): Promise<T> {
   const key = Deno.env.get("GEMINI_API_KEY");
   if (!key) throw new Error("GEMINI_API_KEY not set");
+  const generationConfig: Record<string, unknown> = {
+    temperature: 0,
+    maxOutputTokens: Math.max(opts.maxTokens ?? 2000, 1024) * 2,
+    responseMimeType: "application/json",
+    responseSchema: toGeminiSchema(opts.schema),
+  };
+  if (lowThinking) generationConfig.thinkingConfig = { thinkingLevel: "low" };
   const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
     method: "POST",
     headers: { "x-goog-api-key": key, "content-type": "application/json" },
+    signal: AbortSignal.timeout(Number(Deno.env.get("AI_TIMEOUT_MS") ?? "20000")),
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: opts.system }] },
       contents: [{ role: "user", parts: [{ text: opts.user }] }],
-      generationConfig: {
-        temperature: 0,
-        maxOutputTokens: Math.max(opts.maxTokens ?? 2000, 1024) * 2,
-        responseMimeType: "application/json",
-        responseSchema: toGeminiSchema(opts.schema),
-      },
+      generationConfig,
     }),
   });
   if (!r.ok) throw new Error(`Gemini API ${r.status}: ${(await r.text()).slice(0, 300)}`);
@@ -182,7 +190,7 @@ async function geminiOnce<T>(opts: AIOpts, model: string): Promise<T> {
   const text = (data.candidates?.[0]?.content?.parts ?? [])
     .filter((p: { text?: string; thought?: boolean }) => p.text && !p.thought)
     .map((p: { text: string }) => p.text).join("");
-  if (!text) throw new Error("no structured output");
+  if (!text) throw new Error(`no structured output (finish: ${data.candidates?.[0]?.finishReason ?? "?"})`);
   return JSON.parse(text.replace(/^```(?:json)?\s*|\s*```$/g, "")) as T;
 }
 

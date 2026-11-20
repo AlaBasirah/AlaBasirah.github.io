@@ -122,8 +122,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    console.log(JSON.stringify({ step: "diag", terms, hits: passages.length, found: result.found, cited: result.cited, refsInText: (result.answer ?? "").match(/\[\d+\]/g) }));
-
     // 3) تحقق صارم: لا إجابة بلا إحالات صحيحة إلى المقاطع
     const valid = new Set(passages.map((_, i) => i + 1));
     const usedInText = [...(result.answer ?? "").matchAll(/\[(\d+)\]/g)].map((m) => Number(m[1]));

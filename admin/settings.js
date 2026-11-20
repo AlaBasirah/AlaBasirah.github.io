@@ -291,9 +291,9 @@ export async function renderCustomize(app, ctx) {
 
 /* ============================ الذكاء الاصطناعي والخادم ============================ */
 const MODELS = [
-  ["gemini|gemini-3.8-flash", "Gemini 3.8 Flash — مجاني (موصى به حاليًا)"],
+  ["gemini|gemini-3.5-flash-lite", "Gemini 3.5 Flash-Lite — مجاني، الأسرع (موصى به حاليًا)"],
   ["gemini|gemini-3.6-flash", "Gemini 3.6 Flash — مجاني"],
-  ["gemini|gemini-3.5-flash-lite", "Gemini 3.5 Flash-Lite — مجاني، أسرع وأقل دقة"],
+  ["gemini|gemini-3.8-flash", "Gemini 3.8 Flash — مجاني، الأدق لكنه كثير الازدحام"],
   ["claude|claude-sonnet-5-5", "Claude Sonnet 5.5 — مدفوع، أدق التزامًا بالمصادر"],
   ["claude|claude-haiku-5-5", "Claude Haiku 5.5 — مدفوع، أرخص"],
   ["claude|claude-opus-5-5", "Claude Opus 5.5 — مدفوع، الأعلى دقة وتكلفة"],
@@ -328,7 +328,7 @@ export async function renderAI(app, ctx) {
       el("div", { class: "note ok", style: "margin-bottom:14px" },
         "قاعدة «لا يجيب إلا من المصادر» مكتوبة في الخادم ولا يمكن إلغاؤها من هنا. وكل إجابة لا تستند إلى مقطع حقيقي من الكتب تُحذف تلقائيًا ويظهر بدلها الاعتذار."),
       el("div", { class: "field" }, el("label", {}, "النموذج"), model,
-        el("div", { class: "help" }, "نماذج Gemini تعمل بالمفتاح المجاني من Google بحدود يومية. نماذج Claude تحتاج مفتاحًا مدفوعًا من Anthropic.")),
+        el("div", { class: "help" }, "نماذج Gemini تعمل بالمفتاح المجاني من Google بحدود يومية، وإن كان النموذج المختار مزدحمًا ينتقل الموقع تلقائيًا إلى نموذج مجاني آخر. نماذج Claude تحتاج مفتاحًا مدفوعًا من Anthropic.")),
       el("div", { class: "field" }, el("label", {}, "تعليمات إضافية لأسلوب الإجابة"), extra,
         el("div", { class: "help" }, "تُضاف إلى القواعد الأساسية ولا تلغيها: الأسلوب، الطول، طريقة المخاطبة.")),
       el("div", { class: "field" }, el("label", {}, "رسالة عدم وجود نص في المصادر"), nf),

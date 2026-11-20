@@ -38,6 +38,7 @@ export const DEFAULT_SITE = {
     placeholder: "اكتب سؤالك هنا…",
     hint: "لا يلزمك تسجيل الدخول. الإجابات مأخوذة من المصادر المعتمدة في الموقع فقط، مع ذكر الكتاب والصفحة.",
     loading: "نبحث لك في الكتب…",
+    related_note: "لم نجد نصًّا يجيب عن سؤالك بلفظه، وهذا أقرب ما ورد في الكتب المعتمدة من معناه:",
     btn_short: "اختصر الإجابة",
     btn_simple: "بسّط الإجابة",
     btn_full: "الإجابة الكاملة",
@@ -76,7 +77,7 @@ export const DEFAULT_SITE = {
 
 export const DEFAULT_SERVER = {
   provider: "gemini",
-  model: "gemini-3.5-flash-lite",
+  model: "gemini-3.6-flash",
   extra_instructions: "",
   not_found_message: "",
   top_k: 12,

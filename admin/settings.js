@@ -107,7 +107,7 @@ export async function renderOverview(app, ctx) {
 /* ============================ تخصيص الموقع ============================ */
 const TEXT_GROUPS = [
   ["الصفحة الرئيسية", [["faq_title", "عنوان قائمة الأسئلة"], ["faq_more", "زر عرض المزيد"], ["faq_empty", "عند عدم وجود أسئلة"], ["human_btn", "زر التحدث مع إنسان"], ["placeholder", "النص داخل مربع السؤال"], ["hint", "التلميح تحت مربع السؤال", true], ["mine_btn", "زر «أسئلتي»"], ["account_btn", "زر «حسابي»"], ["sources_link", "رابط المصادر"], ["about_link", "رابط عن الموقع"], ["footer_note", "سطر إضافي في التذييل"]]],
-  ["الإجابة", [["loading", "أثناء البحث"], ["btn_short", "زر اختصار الإجابة"], ["btn_simple", "زر تبسيط الإجابة"], ["btn_full", "زر العودة للإجابة الكاملة"], ["disclaimer_found", "التنبيه تحت الإجابة", true], ["disclaimer_notfound", "التنبيه عند عدم وجود نص", true]]],
+  ["الإجابة", [["loading", "أثناء البحث"], ["related_note", "تنبيه «أقرب ما ورد»", true], ["btn_short", "زر اختصار الإجابة"], ["btn_simple", "زر تبسيط الإجابة"], ["btn_full", "زر العودة للإجابة الكاملة"], ["disclaimer_found", "التنبيه تحت الإجابة", true], ["disclaimer_notfound", "التنبيه عند عدم وجود نص", true]]],
   ["المحادثة مع إنسان", [["searching_staff", "أثناء البحث عن مشرف"], ["waiting_title", "عنوان الانتظار"], ["waiting_sub", "شرح الانتظار", true], ["staff_label", "اسم المشرف الظاهر للزائر"], ["joined", "عند انضمام المشرف"], ["ended", "عند انتهاء المحادثة", true]]],
   ["عدم توفر مشرف", [["apology", "عبارة الاعتذار", true], ["apology_limit", "الاعتذار عند كثرة الطلبات", true], ["inquiry_label", "العنوان فوق مربع الاستفسار", true], ["inquiry_btn", "زر الإرسال"], ["inquiry_thanks", "رسالة الشكر بعد الإرسال", true]]],
 ];
@@ -292,8 +292,8 @@ export async function renderCustomize(app, ctx) {
 
 /* ============================ الذكاء الاصطناعي والخادم ============================ */
 const MODELS = [
-  ["gemini|gemini-3.5-flash-lite", "Gemini 3.5 Flash-Lite — مجاني، الأسرع (موصى به حاليًا)"],
-  ["gemini|gemini-3.6-flash", "Gemini 3.6 Flash — مجاني"],
+  ["gemini|gemini-3.6-flash", "Gemini 3.6 Flash — مجاني، عربية جيدة (موصى به)"],
+  ["gemini|gemini-3.5-flash-lite", "Gemini 3.5 Flash-Lite — مجاني، الأسرع لكن عربيته أضعف"],
   ["gemini|gemini-3.8-flash", "Gemini 3.8 Flash — مجاني، الأدق لكنه كثير الازدحام"],
   ["claude|claude-sonnet-5-5", "Claude Sonnet 5.5 — مدفوع، أدق التزامًا بالمصادر"],
   ["claude|claude-haiku-5-5", "Claude Haiku 5.5 — مدفوع، أرخص"],
@@ -328,7 +328,7 @@ export async function renderAI(app, ctx) {
       el("h3", { class: "h3" }, "الذكاء الاصطناعي"),
       el("div", { class: "note ok", style: "margin-bottom:14px" },
         "قاعدة «لا يجيب إلا من المصادر» مكتوبة في الخادم ولا يمكن إلغاؤها من هنا. وكل إجابة لا تستند إلى مقطع حقيقي من الكتب تُحذف تلقائيًا ويظهر بدلها الاعتذار."),
-      el("div", { class: "field" }, el("label", {}, "النموذج"), model,
+      el("div", { class: "field" }, el("label", {}, "نموذج كتابة الإجابة"), model,
         el("div", { class: "help" }, "نماذج Gemini تعمل بالمفتاح المجاني من Google بحدود يومية، وإن كان النموذج المختار مزدحمًا ينتقل الموقع تلقائيًا إلى نموذج مجاني آخر. نماذج Claude تحتاج مفتاحًا مدفوعًا من Anthropic.")),
       el("div", { class: "field" }, el("label", {}, "تعليمات إضافية لأسلوب الإجابة"), extra,
         el("div", { class: "help" }, "تُضاف إلى القواعد الأساسية ولا تلغيها: الأسلوب، الطول، طريقة المخاطبة.")),

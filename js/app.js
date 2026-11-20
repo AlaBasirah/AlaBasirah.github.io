@@ -72,12 +72,18 @@ function renderCitations(cites) {
   if (!cites?.length) return null;
   return el("div", { class: "cites" },
     el("div", { class: "small muted" }, "المصادر (اضغط لعرض النص):"),
-    cites.map((c) => el("details", { class: "cite", id: `cite-${c.n}` },
-      el("summary", {},
-        el("span", { class: "n" }, c.n),
-        el("span", { class: "ref" }, c.book, " ",
-          el("small", {}, [c.author, c.volume ? `ج${c.volume}` : null, c.page ? `ص${c.page}` : null].filter(Boolean).join(" · ")))),
-      el("blockquote", {}, c.excerpt))));
+    cites.map((c) => {
+      const raw = el("details", { class: "raw" },
+        el("summary", {}, "النص كما ورد في الملف المصوّر"),
+        el("div", { class: "raw-text" }, c.excerpt));
+      return el("details", { class: "cite", id: `cite-${c.n}` },
+        el("summary", {},
+          el("span", { class: "n" }, c.n),
+          el("span", { class: "ref" }, c.book, " ",
+            el("small", {}, [c.author, c.volume ? `ج${c.volume}` : null, c.page ? `ص${c.page}` : null].filter(Boolean).join(" · ")))),
+        c.quote ? el("blockquote", {}, "«", c.quote, "»") : null,
+        c.excerpt ? raw : null);
+    }));
 }
 
 function showAnswer(question, res) {
@@ -91,6 +97,7 @@ function showAnswer(question, res) {
   }) : null;
   const box = el("article", { class: `answer${res.found ? "" : " notfound"}`, "aria-live": "polite" },
     el("p", { class: "question" }, question),
+    res.related ? el("div", { class: "related-note" }, T("related_note")) : null,
     body,
     tools,
     F("show_citations") ? renderCitations(res.citations) : null,

@@ -198,6 +198,8 @@ async function geminiOnce<T>(opts: AIOpts, model: string, lowThinking: boolean):
 export type ServerSettings = {
   provider?: string;
   model?: string;
+  answer_model?: string;
+  terms_model?: string;
   extra_instructions?: string;
   not_found_message?: string;
   top_k?: number;

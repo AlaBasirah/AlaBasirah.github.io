@@ -3,35 +3,66 @@ import { admin, claudeTool, cors, json, requireUser, serverSettings } from "../_
 
 
 const DEFAULT_NOT_FOUND =
-  "لم أجد في المصادر المعتمدة لدينا نصًّا يجيب عن سؤالك إجابةً موثّقة، ولا أستطيع أن أجيب من خارجها. " +
-  "يمكنك إعادة صياغة السؤال بكلمات أخرى، أو الضغط على زر «تحدّث مع إنسان» ليتواصل معك أحد المشرفين.";
+  "لم أجد في الكتب المعتمدة في الموقع كلامًا يتناول هذا السؤال. جرّب صياغته بكلمات أخرى، " +
+  "أو اضغط «تحدّث مع إنسان» ليجيبك أحد المشرفين.";
 
-const TERMS_SYSTEM = `أنت مساعد بحث في كتب التراث الإسلامي العربية (كتب ابن تيمية وابن القيم ونحوها).
-مهمتك الوحيدة: تحويل سؤال الزائر إلى كلمات وعبارات بحث قصيرة تُستخدم للبحث النصي في هذه الكتب.
-- اكتب 4 إلى 10 عبارات، كل عبارة كلمة أو كلمتان أو ثلاث على الأكثر.
-- استعمل المصطلحات التي يستعملها العلماء المتقدمون في كتبهم (مثل: التناسخ، الحلول، الاتحاد، الباطنية، الإمامة، التأويل، القرامطة، الإسماعيلية، النبوة، الشفاعة…) إضافة إلى ألفاظ السائل.
-- اكتب صيغًا بديلة للكلمة نفسها عند الحاجة (مفرد/جمع، مصدر/فعل).
+const TERMS_SYSTEM = `أنت مساعد بحث في كتب التراث الإسلامي العربية (كتب ابن القيم وابن تيمية).
+مهمتك الوحيدة: تحويل سؤال الزائر إلى عبارات بحث قصيرة تُستخدم للبحث النصي في هذه الكتب.
+- اكتب 6 إلى 12 عبارة، كل عبارة كلمة أو كلمتان.
+- استعمل ألفاظ العلماء المتقدمين في كتبهم إضافة إلى ألفاظ السائل.
+- إن كان السؤال تعريفيًا بالإسلام (ما الإسلام، التوحيد، أركان الإسلام، الإيمان، النبوة، القرآن، الصلاة، الآخرة…) فأضف المصطلحات الأساسية القريبة: الإسلام، الإيمان، التوحيد، الشهادتين، أركان، عبادة الله، الرسل، الدين.
+- إن كان عن الفرق والعقائد المخالفة فأضف: الباطنية، القرامطة، الإسماعيلية، الحلول، الاتحاد، التناسخ، التأويل، الملاحدة.
 - لا تجب عن السؤال.`;
 
 const ANSWER_SYSTEM = `أنت «بصيرة»: محاور علمي هادئ ولطيف، يجيب زوّار الموقع (وأكثرهم من أبناء الطائفة الدرزية) عن أسئلتهم في الدين.
 
-قواعد ملزمة لا يجوز مخالفتها بأي حال:
-1. لا تجب إلا من المقاطع المرقّمة المرفقة تحت عنوان «المقاطع». هي مصدرك الوحيد. لا تستعمل معلوماتك العامة ولا أي مصدر آخر، ولا تضف آية أو حديثًا أو قولًا أو معلومة غير موجودة نصًّا في المقاطع.
-2. كل جملة فيها معلومة يجب أن تنتهي بإحالة إلى رقم المقطع بهذا الشكل: [1] أو [2][5].
-3. إن لم تكن في المقاطع إجابة واضحة عن السؤال نفسه، فاجعل found = false ولا تكتب إجابة من عندك. الأمانة مقدَّمة على الإجابة.
-4. إن أجابت المقاطع عن جزء من السؤال فقط، فأجب عن هذا الجزء وصرّح بأن باقي السؤال لم تجد له نصًّا في المصادر.
-5. انقل المعنى بأمانة دون تحريف أو اقتطاع مخلّ للسياق. يجوز الاقتباس الحرفي القصير بين علامتي «».
-6. الأسلوب: عربي فصيح سهل، محترم ودود، بلا تجريح للسائل ولا لطائفته ولا لعائلته. خاطب العقل بالدليل، ولا تفترض شيئًا عن خلفية السائل ولا جنسه، فلا تقل «أخي» أو «أختي». ابدأ بالجواب مباشرة بلا تحية ولا ختام.
-7. لا تُصدر فتوى في نازلة شخصية لم تنص عليها المقاطع، ولا تحكم على شخص بعينه.
-8. لا تذكر أنك نموذج ذكاء اصطناعي ولا أسماء أي جهات أو أشخاص يديرون الموقع.
-9. إن كان السؤال خارج الدين تمامًا أو طلبًا مسيئًا، فاجعل found = false.
+مصدرك: المقاطع المرقّمة المرفقة، وهي مأخوذة من كتب ابن القيم وابن تيمية. هذه المقاطع مستخرجة آليًّا من ملفات ممسوحة ضوئيًّا، ففيها أخطاء إملائية وكلمات مشوهة وأرقام حواشٍ متداخلة.
 
-حقول إضافية:
-- is_private: اجعلها true إذا تضمن السؤال معلومات شخصية أو عائلية أو اسمًا أو مكانًا محددًا أو ظرفًا خاصًا بالسائل، أو كان مما لا يحسن عرضه للعامة. وإلا false.
-- faq_title: صياغة عامة مختصرة للسؤال (أقل من 90 حرفًا) خالية من أي تفاصيل شخصية، تصلح لقائمة «أكثر الأسئلة».`;
+قواعد المعنى (ملزمة):
+1. كل معنى في إجابتك يجب أن يكون موجودًا في المقاطع. لا تضف حكمًا أو دليلًا أو آية أو حديثًا أو معلومة تاريخية ليست فيها.
+2. العبارة والصياغة لك أنت: اكتب إجابة جديدة بأسلوب الموقع، تجمع المعاني من المقاطع وترتّبها وتشرحها. لا تنسخ جمل المقاطع كما هي.
+3. ضع رقم المقطع بعد كل جملة تستند إليه بهذا الشكل: [3] أو [2][5].
+
+قواعد اللغة (ملزمة):
+4. اكتب بعربية فصيحة صحيحة سليمة الإملاء والنحو، واضحة لغير المتخصص.
+5. لا تنقل أي كلمة مشوهة من المقاطع. إن ظهر لك أن كلمة مشوهة بسبب المسح الضوئي (مثل «وشحيطانه» = «وشيطانه»، «الححد» = «الحمد») فاكتبها صحيحة، وإن لم يتضح المقصود فلا تستعملها.
+6. لا تقتبس الآيات والأحاديث حرفيًّا من المقاطع لأنها قد تكون مشوهة؛ اذكر معناها فقط، إلا إذا كان النص سليمًا تمامًا.
+7. اجعل الإجابة متوسطة الطول (من 4 إلى 10 جمل)، في فقرة أو فقرتين، وابدأ بالجواب مباشرة بلا تحية ولا ختام، ولا تخاطب السائل بما يفترض جنسه.
+
+نوع الإجابة (الحقل mode):
+- "direct": المقاطع تجيب عن السؤال نفسه. اكتب إجابة كاملة منها.
+- "related": المقاطع لا تجيب عن السؤال نصًّا لكنها تتناول معانيه أو ما يقرب منه. اكتب للزائر أنفع إجابة ممكنة من هذه المعاني، ولا تدّعِ أنها جواب نصي صريح. لا تترك الزائر بلا فائدة إن وُجد في المقاطع ما ينفعه.
+- "none": المقاطع لا علاقة لها بالسؤال إطلاقًا، أو السؤال خارج الدين، أو مسيء. اترك answer فارغًا.
+
+الأسئلة التعريفية بالإسلام (ما الإسلام؟ من محمد ﷺ؟ ما التوحيد؟ ما القرآن؟ …): ابنِ منها إجابة تعريفية واضحة ومرتبة من معاني المقاطع، وبسّط المصطلحات.
+
+السلوك:
+8. محترم ودود، بلا تجريح للسائل ولا لطائفته ولا لعائلته، يخاطب العقل بالدليل.
+9. لا تُصدر فتوى في نازلة شخصية، ولا تحكم على شخص بعينه.
+10. لا تذكر أنك نموذج ذكاء اصطناعي ولا من يدير الموقع.
+
+حقول أخرى:
+- quotes: لكل مقطع استشهدت به، اكتب أهم عبارة منه (من 10 إلى 35 كلمة) بعد تصحيح أخطاء المسح الضوئي الواضحة فقط دون تغيير المعنى أو الألفاظ السليمة. هذه العبارة تُعرض للزائر بوصفها نص الكتاب.
+- is_private: true إذا تضمن السؤال معلومات شخصية أو عائلية أو اسمًا أو مكانًا محددًا أو ظرفًا خاصًا بالسائل، وإلا false.
+- faq_title: صياغة عامة مختصرة للسؤال (أقل من 90 حرفًا) بلا تفاصيل شخصية.`;
 
 type Terms = { terms: string[] };
-type Answer = { found: boolean; answer: string; cited: number[]; is_private: boolean; faq_title: string };
+type Answer = {
+  mode: "direct" | "related" | "none";
+  answer: string;
+  cited: number[];
+  quotes: { n: number; text: string }[];
+  is_private: boolean;
+  faq_title: string;
+};
+
+/** إزالة بقايا الكلمات المقطوعة في أول الإجابة (مثل «الإ الإسلام») */
+function tidy(text: string): string {
+  let t = text.replace(/[\u200e\u200f]/g, "").replace(/[ \t]+/g, " ").trim();
+  const m = t.match(/^(\S{1,4})\s+(\S+)/);
+  if (m && m[2].startsWith(m[1]) && m[2] !== m[1]) t = t.slice(m[1].length).trim();
+  return t;
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
@@ -78,14 +109,14 @@ Deno.serve(async (req) => {
         required: ["terms"],
       },
       maxTokens: 300,
-      model,
+      model: provider === "claude" ? model : (cfg.terms_model || "gemini-3.5-flash-lite"),
       provider,
     });
 
     // 2) البحث في المصادر المعتمدة فقط
     const { data: hits, error } = await db.rpc("search_chunks", {
       terms: [question, ...terms].slice(0, 14),
-      k: Math.min(Math.max(cfg.top_k ?? 12, 4), 30),
+      k: Math.min(Math.max(cfg.top_k ?? 16, 4), 30),
     });
     if (error) throw error;
 
@@ -93,7 +124,8 @@ Deno.serve(async (req) => {
       id: number; book_title: string; author: string; volume: string | null; page: number | null; content: string;
     }>;
 
-    let result: Answer = { found: false, answer: NOT_FOUND, cited: [], is_private: true, faq_title: "" };
+    const EMPTY: Answer = { mode: "none", answer: "", cited: [], quotes: [], is_private: true, faq_title: "" };
+    let result: Answer = EMPTY;
 
     if (passages.length) {
       const block = passages.map((p, i) =>
@@ -102,7 +134,7 @@ Deno.serve(async (req) => {
 
       result = await claudeTool<Answer>({
         system,
-        model,
+        model: provider === "claude" ? model : (cfg.answer_model || model || "gemini-3.6-flash"),
         provider,
         user: `المقاطع:\n${block}\n\n———\nسؤال الزائر:\n${question}`,
         toolName: "answer",
@@ -110,16 +142,21 @@ Deno.serve(async (req) => {
         schema: {
           type: "object",
           properties: {
-            found: { type: "boolean" },
-            answer: { type: "string", description: "نص الإجابة مع الإحالات [n]. اتركه فارغًا إن كانت found=false" },
+            mode: { type: "string", enum: ["direct", "related", "none"] },
+            answer: { type: "string", description: "نص الإجابة مع الإحالات [n]. فارغ إن كانت mode=none" },
             cited: { type: "array", items: { type: "integer" }, description: "أرقام المقاطع المستشهد بها" },
+            quotes: {
+              type: "array",
+              items: { type: "object", properties: { n: { type: "integer" }, text: { type: "string" } }, required: ["n", "text"] },
+            },
             is_private: { type: "boolean" },
             faq_title: { type: "string" },
           },
-          required: ["found", "answer", "cited", "is_private", "faq_title"],
+          required: ["mode", "answer", "cited", "quotes", "is_private", "faq_title"],
         },
-        maxTokens: 2500,
+        maxTokens: 3000,
       });
+      result.answer = tidy(result.answer ?? "");
     }
 
     // 3) تحقق صارم: لا إجابة بلا إحالات صحيحة إلى المقاطع
@@ -128,20 +165,25 @@ Deno.serve(async (req) => {
     const cited = [...new Set([...(result.cited ?? []), ...usedInText])].filter((n) => valid.has(n)).sort((a, b) => a - b);
     const badRefs = usedInText.some((n) => !valid.has(n));
 
-    if (!result.found || !cited.length || badRefs || !(result.answer ?? "").trim()) {
-      result = { found: false, answer: NOT_FOUND, cited: [], is_private: true, faq_title: "" };
-    }
+    const found = result.mode !== "none" && cited.length > 0 && !badRefs && !!result.answer.trim();
+    if (!found) result = { ...EMPTY, answer: NOT_FOUND };
+    const related = found && result.mode === "related";
 
-    const citations = result.found
+    const quoteOf = new Map((result.quotes ?? []).map((q) => [q.n, String(q.text ?? "").trim()]));
+    const citations = found
       ? cited.map((n) => {
           const p = passages[n - 1];
-          return { n, book: p.book_title, author: p.author, volume: p.volume, page: p.page, excerpt: p.content };
+          return {
+            n, book: p.book_title, author: p.author, volume: p.volume, page: p.page,
+            quote: quoteOf.get(n) || null,
+            excerpt: p.content,
+          };
         })
       : [];
 
     // 4) الحفظ والأسئلة الشائعة
     let faq_id: number | null = null;
-    if (result.found && !result.is_private && result.faq_title?.trim()) {
+    if (found && !related && !result.is_private && result.faq_title?.trim()) {
       const { data } = await db.rpc("bump_faq", {
         p_title: result.faq_title.trim().slice(0, 120),
         p_answer: result.answer,
@@ -155,12 +197,12 @@ Deno.serve(async (req) => {
       question,
       answer: result.answer,
       citations,
-      found: result.found,
+      found,
       is_private: result.is_private,
       faq_id,
     }).select("id, created_at").single();
 
-    return json({ id: saved?.id, found: result.found, answer: result.answer, citations });
+    return json({ id: saved?.id, found, related, answer: result.answer, citations });
   } catch (e) {
     console.error(e);
     const busy = String(e).includes("quota");

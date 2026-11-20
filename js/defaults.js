@@ -38,6 +38,9 @@ export const DEFAULT_SITE = {
     placeholder: "اكتب سؤالك هنا…",
     hint: "لا يلزمك تسجيل الدخول. الإجابات مأخوذة من المصادر المعتمدة في الموقع فقط، مع ذكر الكتاب والصفحة.",
     loading: "نبحث لك في الكتب…",
+    btn_short: "اختصر الإجابة",
+    btn_simple: "بسّط الإجابة",
+    btn_full: "الإجابة الكاملة",
     disclaimer_found: "هذه الإجابة مستخرجة آليًّا من المصادر المعتمدة في الموقع فقط. راجع النصوص أعلاه، وإن بقي لديك إشكال فاضغط «تحدّث مع إنسان».",
     disclaimer_notfound: "يمكنك الضغط على «تحدّث مع إنسان» ليتواصل معك أحد المشرفين.",
     searching_staff: "نبحث عن مشرف متاح…",
@@ -67,6 +70,7 @@ export const DEFAULT_SITE = {
     show_sources: true,
     show_about: true,
     show_citations: true,
+    rewrite_buttons: true,
   },
 };
 

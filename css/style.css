@@ -331,3 +331,13 @@ body.no-anim *, body.no-anim *::before, body.no-anim *::after { animation: none 
 .brand .logo { object-fit: contain; }
 .footer-note { margin-top: 6px; }
 footer.site .small button + button::before { content: "· "; color: var(--ink-400); }
+
+/* أزرار إعادة الصياغة */
+.rewrite { display: flex; gap: 8px; flex-wrap: wrap; margin: 14px 0 4px; }
+.chip {
+  border: 1.5px solid var(--line); background: #fff; color: var(--teal-800); cursor: pointer;
+  border-radius: 999px; padding: 6px 16px; font-size: 14px; font-weight: 600; transition: all .15s;
+}
+.chip:hover { border-color: var(--teal-400); }
+.chip.on { background: var(--g-sea); color: #fff; border-color: transparent; }
+.chip:disabled { opacity: .7; cursor: wait; }

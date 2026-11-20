@@ -51,6 +51,22 @@ def parse_name(path: Path):
 
 # ----------------------------------------------------------------- القراءة
 def pages_from_pdf(path: Path):
+    """يفضّل pdftotext -raw لأنه يحفظ ترتيب الكلمات العربية ومسافاتها؛ وإلا يستخدم pypdf."""
+    import shutil
+    import subprocess
+    if shutil.which("pdftotext"):
+        out = subprocess.run(["pdftotext", "-raw", "-enc", "UTF-8", str(path), "-"],
+                             capture_output=True, check=False).stdout.decode("utf-8", "ignore")
+        for i, page in enumerate(out.split("\f"), start=1):
+            lines = [l.strip() for l in page.splitlines() if l.strip()]
+            # كثير من ملفات الكتب يخرج فيها سطر لكل كلمة: نعيد ضمّها بمسافات
+            if lines and sum(len(l.split()) <= 2 for l in lines) / len(lines) > 0.6:
+                text = " ".join(lines)
+            else:
+                text = "\n".join(lines)
+            if text.strip():
+                yield i, text
+        return
     try:
         from pypdf import PdfReader
     except ImportError:

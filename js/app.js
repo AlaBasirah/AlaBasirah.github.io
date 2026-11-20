@@ -83,14 +83,51 @@ function renderCitations(cites) {
 function showAnswer(question, res) {
   const area = $("#answerArea");
   area.innerHTML = "";
+  let body = renderAnswerBody(res.answer);
+  const tools = res.found && (res.id || res.faq_id) && F("rewrite_buttons") !== false ? rewriteTools(res, (text) => {
+    const nb = renderAnswerBody(text);
+    body.replaceWith(nb);
+    body = nb;
+  }) : null;
   const box = el("article", { class: `answer${res.found ? "" : " notfound"}`, "aria-live": "polite" },
     el("p", { class: "question" }, question),
-    renderAnswerBody(res.answer),
+    body,
+    tools,
     F("show_citations") ? renderCitations(res.citations) : null,
     el("div", { class: "disclaimer" },
       res.found ? T("disclaimer_found") : T("disclaimer_notfound")));
   area.append(box);
   box.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+/** أزرار «اختصر الإجابة» و«بسّط الإجابة» و«الإجابة الكاملة» */
+function rewriteTools(res, swap) {
+  const cache = { full: res.answer };
+  const row = el("div", { class: "rewrite" });
+  const make = (mode, label) => el("button", { type: "button", class: "chip", "data-mode": mode, onclick: async (e) => {
+    const btn = e.currentTarget;
+    row.querySelectorAll(".chip").forEach((b) => b.classList.toggle("on", b === btn));
+    if (cache[mode]) return swap(cache[mode]);
+    btn.disabled = true;
+    const old = btn.textContent;
+    btn.textContent = "لحظة…";
+    try {
+      const out = DEMO
+        ? { text: mode === "short" ? "هذه صيغة مختصرة تجريبية للإجابة [1]." : "هذه صيغة مبسطة تجريبية: الكلام هنا بكلمات سهلة جدًا [1]." }
+        : await fn("rewrite", { mode, kind: res.faq_id ? "faq" : "ask", id: res.faq_id ?? res.id });
+      cache[mode] = out.text;
+      swap(out.text);
+    } catch (ex) {
+      toast(ex.message || "تعذّرت إعادة الصياغة");
+      row.querySelector('[data-mode="full"]').click();
+    } finally {
+      btn.disabled = false;
+      btn.textContent = old;
+    }
+  } }, label);
+  row.append(make("short", T("btn_short")), make("simple", T("btn_simple")), make("full", T("btn_full")));
+  row.querySelector('[data-mode="full"]').classList.add("on");
+  return row;
 }
 
 async function ask(question) {
@@ -144,7 +181,7 @@ function renderFaq(all) {
   shown.forEach((f, i) => list.append(
     el("li", { class: `faq-item${f.status === "featured" ? " featured" : ""}` },
       el("button", {
-        onclick: () => showAnswer(f.title, { found: true, answer: f.answer, citations: f.citations }),
+        onclick: () => showAnswer(f.title, { found: true, answer: f.answer, citations: f.citations, faq_id: f.id }),
       },
         el("span", { class: "star" }, i + 1),
         el("span", {}, el("span", { class: "q" }, f.title),

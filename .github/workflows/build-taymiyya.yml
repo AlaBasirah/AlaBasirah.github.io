@@ -1,0 +1,28 @@
+# يبني كتب ابن تيمية المختارة من نصوص OpenITI ويحفظها في فرع ingest-taymiyya
+name: build-taymiyya
+on:
+  push:
+    branches: [ingest-it]
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch OpenITI texts (Ibn Taymiyya only)
+        run: |
+          git clone -q --depth 1 --filter=blob:none --sparse https://github.com/OpenITI/0750AH.git openiti
+          cd openiti && git sparse-checkout set data/0728IbnTaymiyya && cd ..
+          ls openiti/data/0728IbnTaymiyya | head -200
+      - name: Build
+        run: python3 tools/build_openiti.py openiti/data/0728IbnTaymiyya tools/taymiyya-selection.tsv "ابن تيمية" it out
+      - name: Commit to ingest-taymiyya branch
+        run: |
+          cd out
+          git init -q -b ingest-taymiyya
+          git config user.name "Basira"
+          git config user.email "basira@users.noreply.github.com"
+          git add -A && git commit -q -m "كتب ابن تيمية"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" ingest-taymiyya

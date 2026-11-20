@@ -331,7 +331,7 @@ Deno.serve(async (req) => {
 
     // 2) البحث في المصادر المعتمدة فقط
     const { data: hits, error } = await db.rpc("search_chunks", {
-      terms: [question, ...terms].slice(0, 14),
+      terms: (terms?.length ? terms : [question]).slice(0, 10),
       k: Math.min(Math.max(cfg.top_k ?? 16, 4), 30),
     });
     if (error) throw error;

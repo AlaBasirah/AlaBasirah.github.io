@@ -39,6 +39,9 @@ export const DEFAULT_SITE = {
     hint: "لا يلزمك تسجيل الدخول. الإجابات مأخوذة من المصادر المعتمدة في الموقع فقط، مع ذكر الكتاب والصفحة.",
     loading: "نبحث لك في الكتب…",
     related_note: "لم نجد نصًّا يجيب عن سؤالك بلفظه، وهذا أقرب ما ورد في الكتب المعتمدة من معناه:",
+    btn_more: "استزد من الإجابة",
+    more_title: "مزيد من الإجابة",
+    more_none: "لم نجد في الكتب المعتمدة مزيدًا يتصل بسؤالك.",
     btn_short: "اختصر الإجابة",
     btn_simple: "بسّط الإجابة",
     btn_full: "الإجابة الكاملة",
@@ -72,6 +75,7 @@ export const DEFAULT_SITE = {
     show_about: true,
     show_citations: true,
     rewrite_buttons: true,
+    more_button: true,
   },
 };
 

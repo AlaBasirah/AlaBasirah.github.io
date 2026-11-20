@@ -95,16 +95,56 @@ function showAnswer(question, res) {
     body.replaceWith(nb);
     body = nb;
   }) : null;
+  const moreRow = res.found && F("more_button") !== false ? moreTools(question, res) : null;
   const box = el("article", { class: `answer${res.found ? "" : " notfound"}`, "aria-live": "polite" },
     el("p", { class: "question" }, question),
     res.related ? el("div", { class: "related-note" }, T("related_note")) : null,
     body,
     tools,
     F("show_citations") ? renderCitations(res.citations) : null,
+    moreRow,
     el("div", { class: "disclaimer" },
       res.found ? T("disclaimer_found") : T("disclaimer_notfound")));
   area.append(box);
   box.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+/** زر «استزد من الإجابة»: يجلب مقاطع جديدة ويكتب إضافة تتناول جوانب أخرى */
+function moreTools(question, res) {
+  const shownCids = new Set((res.citations ?? []).map((c) => c.cid).filter(Boolean));
+  let nextN = Math.max(0, ...(res.citations ?? []).map((c) => c.n)) + 1;
+  let texts = [res.answer];
+  let rounds = 0;
+  const wrap = el("div");
+  const btn = el("button", { type: "button", class: "more-btn-answer", onclick: async () => {
+    btn.disabled = true;
+    const label = btn.textContent;
+    btn.textContent = T("loading");
+    try {
+      const out = DEMO
+        ? { found: true, answer: "هذه إضافة تجريبية تتناول جانبًا آخر من السؤال [" + nextN + "].", citations: [{ n: nextN, book: "مثال: النبوات", author: "ابن تيمية", volume: "1", page: 50, quote: "عبارة تجريبية من الكتاب.", excerpt: "نص تجريبي." }] }
+        : await fn("more", { question, previous: texts.join("\n\n").slice(-6000), exclude: [...shownCids], start_n: nextN });
+      if (!out.found) {
+        row.replaceWith(el("p", { class: "small muted", style: "text-align:center;margin-top:14px" }, T("more_none")));
+        return;
+      }
+      out.citations.forEach((c) => { if (c.cid) shownCids.add(c.cid); nextN = Math.max(nextN, c.n + 1); });
+      texts.push(out.answer);
+      rounds++;
+      wrap.append(el("section", { class: "more-block" },
+        el("h4", {}, T("more_title")),
+        renderAnswerBody(out.answer),
+        F("show_citations") ? renderCitations(out.citations) : null));
+      if (rounds >= 3) row.remove();
+    } catch (ex) {
+      toast(ex.message || "تعذّر جلب المزيد");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = label;
+    }
+  } }, "＋ ", T("btn_more"));
+  const row = el("div", { class: "more-row" }, btn);
+  return el("div", {}, wrap, row);
 }
 
 /** أزرار «اختصر الإجابة» و«بسّط الإجابة» و«الإجابة الكاملة» */

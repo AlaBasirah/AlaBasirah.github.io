@@ -66,8 +66,7 @@ export function mailTemplate(title: string, line: string, link: string, cta: str
   </div></body></html>`;
 }
 
-/** استدعاء Claude مع إلزامه بإخراج منظّم عبر أداة واحدة */
-export async function claudeTool<T>(opts: {
+type AIOpts = {
   system: string;
   user: string;
   toolName: string;
@@ -75,7 +74,20 @@ export async function claudeTool<T>(opts: {
   schema: Record<string, unknown>;
   maxTokens?: number;
   model?: string;
-}): Promise<T> {
+  provider?: string;
+};
+
+/**
+ * استدعاء الذكاء الاصطناعي مع إلزامه بإخراج منظّم (JSON).
+ * المزوّد الافتراضي Gemini (له حصة مجانية)، ويمكن التحويل إلى Claude من لوحة التحكم.
+ */
+export async function claudeTool<T>(opts: AIOpts): Promise<T> {
+  const provider = (opts.provider || Deno.env.get("AI_PROVIDER") || "gemini").toLowerCase();
+  return provider === "claude" ? callClaude<T>(opts) : callGemini<T>(opts);
+}
+
+async function callClaude<T>(opts: AIOpts): Promise<T> {
+  const model = opts.model?.startsWith("claude") ? opts.model : (Deno.env.get("CLAUDE_MODEL") || "claude-sonnet-5-5");
   const r = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -84,7 +96,7 @@ export async function claudeTool<T>(opts: {
       "content-type": "application/json",
     },
     body: JSON.stringify({
-      model: opts.model || Deno.env.get("CLAUDE_MODEL") || "claude-sonnet-5-5",
+      model,
       max_tokens: opts.maxTokens ?? 2000,
       temperature: 0,
       system: opts.system,
@@ -100,8 +112,50 @@ export async function claudeTool<T>(opts: {
   return block.input as T;
 }
 
+/** يحوّل مخطط JSON Schema إلى الصيغة التي يقبلها Gemini */
+function toGeminiSchema(s: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(s)) {
+    if (k === "type") out.type = String(v).toUpperCase();
+    else if (k === "properties") out.properties = Object.fromEntries(Object.entries(v as Record<string, Record<string, unknown>>).map(([pk, pv]) => [pk, toGeminiSchema(pv)]));
+    else if (k === "items") out.items = toGeminiSchema(v as Record<string, unknown>);
+    else if (["required", "description", "enum"].includes(k)) out[k] = v;
+    else if (k === "minItems" || k === "maxItems") out[k] = String(v);
+  }
+  return out;
+}
+
+async function callGemini<T>(opts: AIOpts): Promise<T> {
+  const model = opts.model && !opts.model.startsWith("claude") ? opts.model : (Deno.env.get("GEMINI_MODEL") || "gemini-3.8-flash");
+  const key = Deno.env.get("GEMINI_API_KEY");
+  if (!key) throw new Error("GEMINI_API_KEY not set");
+  const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+    method: "POST",
+    headers: { "x-goog-api-key": key, "content-type": "application/json" },
+    body: JSON.stringify({
+      systemInstruction: { parts: [{ text: opts.system }] },
+      contents: [{ role: "user", parts: [{ text: opts.user }] }],
+      generationConfig: {
+        temperature: 0,
+        maxOutputTokens: Math.max(opts.maxTokens ?? 2000, 1024) * 2,
+        responseMimeType: "application/json",
+        responseSchema: toGeminiSchema(opts.schema),
+      },
+    }),
+  });
+  if (r.status === 429) throw new Error("Gemini quota exceeded");
+  if (!r.ok) throw new Error(`Gemini API ${r.status}: ${await r.text()}`);
+  const data = await r.json();
+  const text = (data.candidates?.[0]?.content?.parts ?? [])
+    .filter((p: { text?: string; thought?: boolean }) => p.text && !p.thought)
+    .map((p: { text: string }) => p.text).join("");
+  if (!text) throw new Error("no structured output");
+  return JSON.parse(text.replace(/^```(?:json)?\s*|\s*```$/g, "")) as T;
+}
+
 /** إعدادات الخادم التي يضبطها المدير من لوحة التحكم */
 export type ServerSettings = {
+  provider?: string;
   model?: string;
   extra_instructions?: string;
   not_found_message?: string;

@@ -48,8 +48,13 @@
 ### خدمة البريد (Resend)
 أنشئ حسابًا في <https://resend.com>، وأضف نطاقًا محايدًا وفعّله، ثم انسخ **API Key**.
 
-### مفتاح الذكاء الاصطناعي (Claude)
-أنشئ مفتاحًا من <https://console.anthropic.com> واشحن رصيدًا. السؤال الواحد يستهلك استدعاءين للنموذج: واحد لاستخراج عبارات البحث وآخر للإجابة.
+### مفتاح الذكاء الاصطناعي (مجاني: Gemini من Google)
+1. ادخل إلى <https://aistudio.google.com> بحساب Google المحايد.
+2. اضغط **Get API key** ثم **Create API key**، وانسخ المفتاح. لا يحتاج بطاقة دفع.
+
+الحصة المجانية محدودة بعدد طلبات في الدقيقة واليوم، وتكفي لعدد زوار قليل. كل سؤال يستهلك طلبين. وإن ازداد الزوار لاحقًا، فمن لوحة التحكم تختار نموذجًا آخر أو تحوّل إلى Claude المدفوع، ويلزم حينها إضافة `ANTHROPIC_API_KEY`.
+
+تنبيه: في الحصة المجانية تستخدم Google نصوص الطلبات لتحسين منتجاتها، أي أسئلة الزوار والمقاطع المرسلة معها. وفي الخطة المدفوعة لا تُستخدم.
 
 ### نشر دوال الخادم
 ثبّت أداة Supabase على جهازك (<https://supabase.com/docs/guides/cli>) ثم من مجلد المشروع:
@@ -59,8 +64,7 @@ supabase login
 supabase link --project-ref <رمز-المشروع>
 
 supabase secrets set \
-  ANTHROPIC_API_KEY="sk-ant-..." \
-  CLAUDE_MODEL="claude-sonnet-5-5" \
+  GEMINI_API_KEY="AIza..." \
   RESEND_API_KEY="re_..." \
   MAIL_FROM="بصيرة <noreply@نطاقك>" \
   SITE_URL="https://basira-site.github.io/basira" \

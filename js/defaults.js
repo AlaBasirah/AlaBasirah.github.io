@@ -71,7 +71,8 @@ export const DEFAULT_SITE = {
 };
 
 export const DEFAULT_SERVER = {
-  model: "claude-sonnet-5-5",
+  provider: "gemini",
+  model: "gemini-3.8-flash",
   extra_instructions: "",
   not_found_message: "",
   top_k: 12,

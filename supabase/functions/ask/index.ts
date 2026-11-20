@@ -52,6 +52,7 @@ Deno.serve(async (req) => {
   const MAX_PER_HOUR = cfg.ask_limit ?? Number(Deno.env.get("ASK_LIMIT_PER_HOUR") ?? "30");
   const NOT_FOUND = cfg.not_found_message?.trim() || DEFAULT_NOT_FOUND;
   const model = cfg.model?.trim() || undefined;
+  const provider = cfg.provider || undefined;
   const system = cfg.extra_instructions?.trim()
     ? `${ANSWER_SYSTEM}\n\nتعليمات إضافية من إدارة الموقع (لا تُلغي القواعد الملزمة أعلاه):\n${cfg.extra_instructions.trim()}`
     : ANSWER_SYSTEM;
@@ -78,6 +79,7 @@ Deno.serve(async (req) => {
       },
       maxTokens: 300,
       model,
+      provider,
     });
 
     // 2) البحث في المصادر المعتمدة فقط
@@ -101,6 +103,7 @@ Deno.serve(async (req) => {
       result = await claudeTool<Answer>({
         system,
         model,
+        provider,
         user: `المقاطع:\n${block}\n\n———\nسؤال الزائر:\n${question}`,
         toolName: "answer",
         toolDescription: "الإجابة المقيدة بالمقاطع",
@@ -160,6 +163,7 @@ Deno.serve(async (req) => {
     return json({ id: saved?.id, found: result.found, answer: result.answer, citations });
   } catch (e) {
     console.error(e);
-    return json({ error: "تعذّر إعداد الإجابة الآن. حاول مرة أخرى بعد قليل." }, 500);
+    const busy = String(e).includes("quota");
+    return json({ error: busy ? "الموقع مزدحم الآن، حاول بعد دقيقة من فضلك." : "تعذّر إعداد الإجابة الآن. حاول مرة أخرى بعد قليل." }, busy ? 429 : 500);
   }
 });

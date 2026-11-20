@@ -291,9 +291,12 @@ export async function renderCustomize(app, ctx) {
 
 /* ============================ الذكاء الاصطناعي والخادم ============================ */
 const MODELS = [
-  ["claude-sonnet-5-5", "Claude Sonnet 5.5 — متوازن (موصى به)"],
-  ["claude-opus-5-5", "Claude Opus 5.5 — الأدق، والأعلى تكلفة"],
-  ["claude-haiku-5-5", "Claude Haiku 5.5 — الأسرع والأرخص"],
+  ["gemini|gemini-3.8-flash", "Gemini 3.8 Flash — مجاني (موصى به حاليًا)"],
+  ["gemini|gemini-3.6-flash", "Gemini 3.6 Flash — مجاني"],
+  ["gemini|gemini-3.5-flash-lite", "Gemini 3.5 Flash-Lite — مجاني، أسرع وأقل دقة"],
+  ["claude|claude-sonnet-5-5", "Claude Sonnet 5.5 — مدفوع، أدق التزامًا بالمصادر"],
+  ["claude|claude-haiku-5-5", "Claude Haiku 5.5 — مدفوع، أرخص"],
+  ["claude|claude-opus-5-5", "Claude Opus 5.5 — مدفوع، الأعلى دقة وتكلفة"],
 ];
 
 export async function renderAI(app, ctx) {
@@ -307,8 +310,8 @@ export async function renderAI(app, ctx) {
     n.addEventListener("input", () => { s[k] = Math.min(max, Math.max(min, Number(n.value) || min)) * factor; });
     return el("div", { class: "field" }, el("label", {}, label), n, help ? el("div", { class: "help" }, help) : null);
   };
-  const model = el("select", { class: "input" }, MODELS.map(([v, l]) => el("option", { value: v, selected: s.model === v }, l)));
-  model.addEventListener("change", () => (s.model = model.value));
+  const model = el("select", { class: "input" }, MODELS.map(([v, l]) => el("option", { value: v, selected: `${s.provider}|${s.model}` === v }, l)));
+  model.addEventListener("change", () => { [s.provider, s.model] = model.value.split("|"); });
   const extra = el("textarea", { class: "textarea", rows: 6, value: s.extra_instructions, placeholder: "مثال: خاطب السائل بعبارة «أخي الكريم»، واختم الإجابة بدعاء قصير بالهداية، واجعل الإجابة في حدود 200 كلمة." });
   extra.addEventListener("input", () => (s.extra_instructions = extra.value));
   const nf = el("textarea", { class: "textarea", rows: 3, value: s.not_found_message, placeholder: "اتركه فارغًا لاستخدام العبارة الافتراضية" });
@@ -324,7 +327,8 @@ export async function renderAI(app, ctx) {
       el("h3", { class: "h3" }, "الذكاء الاصطناعي"),
       el("div", { class: "note ok", style: "margin-bottom:14px" },
         "قاعدة «لا يجيب إلا من المصادر» مكتوبة في الخادم ولا يمكن إلغاؤها من هنا. وكل إجابة لا تستند إلى مقطع حقيقي من الكتب تُحذف تلقائيًا ويظهر بدلها الاعتذار."),
-      el("div", { class: "field" }, el("label", {}, "النموذج"), model),
+      el("div", { class: "field" }, el("label", {}, "النموذج"), model,
+        el("div", { class: "help" }, "نماذج Gemini تعمل بالمفتاح المجاني من Google بحدود يومية. نماذج Claude تحتاج مفتاحًا مدفوعًا من Anthropic.")),
       el("div", { class: "field" }, el("label", {}, "تعليمات إضافية لأسلوب الإجابة"), extra,
         el("div", { class: "help" }, "تُضاف إلى القواعد الأساسية ولا تلغيها: الأسلوب، الطول، طريقة المخاطبة.")),
       el("div", { class: "field" }, el("label", {}, "رسالة عدم وجود نص في المصادر"), nf),

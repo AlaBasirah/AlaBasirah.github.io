@@ -16,8 +16,20 @@ export function json(data: unknown, status = 200) {
   });
 }
 
+/** المفتاح السري للخادم: يدعم المفاتيح القديمة (service_role) والجديدة (sb_secret_...) */
+function serviceKey(): string {
+  const legacy = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (legacy) return legacy;
+  try {
+    const keys = JSON.parse(Deno.env.get("SUPABASE_SECRET_KEYS") ?? "{}");
+    return keys.default ?? Object.values(keys)[0] as string;
+  } catch {
+    return "";
+  }
+}
+
 export function admin(): SupabaseClient {
-  return createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
+  return createClient(Deno.env.get("SUPABASE_URL")!, serviceKey(), {
     auth: { persistSession: false },
   });
 }

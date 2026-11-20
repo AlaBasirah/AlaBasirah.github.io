@@ -1,0 +1,26 @@
+# ينشر ما اكتمل من الكتب إلى فرع ingest-data دون انتظار بقية المهام
+name: publish-partial
+on:
+  push:
+    branches: [publish-partial]
+permissions:
+  contents: write
+  actions: read
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: parts
+          run-id: 44790069611
+          github-token: ${{ github.token }}
+      - name: Commit to ingest-data branch
+        run: |
+          mkdir -p data && find parts -name '*.json' -exec cp {} data/ \; && find parts -name '*.log' -exec cat {} \; > data/report.jsonl
+          cd data
+          git init -q -b ingest-data
+          git config user.name "Basira"
+          git config user.email "basira@users.noreply.github.com"
+          git add -A && git commit -q -m "بيانات الكتب (جزئي)"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" ingest-data

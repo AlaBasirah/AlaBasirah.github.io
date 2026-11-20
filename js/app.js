@@ -1,4 +1,9 @@
 // واجهة الزائر
+
+// روابط دعوة المشرفين واستعادة كلمة المرور تصل إلى الصفحة الرئيسية: نحوّلها إلى لوحة الإشراف
+if (/type=(invite|recovery)/.test(location.hash)) {
+  location.replace(location.pathname.replace(/[^/]*$/, "") + "admin/" + location.hash);
+}
 import { CONFIG } from "./config.js";
 import { DEMO, client, currentUser, demo, ensureSession, fn } from "./api.js";
 import { DEFAULT_SITE, merge } from "./defaults.js";

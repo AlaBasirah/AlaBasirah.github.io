@@ -1,0 +1,6 @@
+sources/*
+!sources/README.txt
+.env
+*.pyc
+__pycache__/
+.DS_Store

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <title>لوحة الإشراف</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Readex+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <header class="adm-bar">
+    <img src="../assets/mark.svg" alt="" width="38" height="38">
+    <strong>لوحة الإشراف</strong>
+    <span class="spacer"></span>
+    <label class="switch hidden" id="availWrap" title="عند التفعيل تصلك رسائل طلب المحادثة">
+      <input type="checkbox" id="avail">
+      <span class="track"><span class="knob"></span></span>
+      <span id="availTxt">غير متاح</span>
+    </label>
+    <button class="pill-btn hidden" id="logout">خروج</button>
+  </header>
+
+  <div id="app" class="adm-main"></div>
+  <div id="modalRoot"></div>
+  <script type="module" src="admin.js"></script>
+</body>
+</html>

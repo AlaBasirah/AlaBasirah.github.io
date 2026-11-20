@@ -137,8 +137,30 @@ function toGeminiSchema(s: Record<string, unknown>): Record<string, unknown> {
   return out;
 }
 
+const GEMINI_FALLBACKS = ["gemini-3.8-flash", "gemini-3.6-flash", "gemini-3.5-flash-lite"];
+
+/** يجرب النموذج المختار، فإن كان مزدحمًا انتقل تلقائيًا إلى النماذج المجانية الأخرى */
 async function callGemini<T>(opts: AIOpts): Promise<T> {
-  const model = opts.model && !opts.model.startsWith("claude") ? opts.model : (Deno.env.get("GEMINI_MODEL") || "gemini-3.8-flash");
+  const first = opts.model && !opts.model.startsWith("claude") ? opts.model : (Deno.env.get("GEMINI_MODEL") || GEMINI_FALLBACKS[0]);
+  const models = [first, ...GEMINI_FALLBACKS.filter((m) => m !== first)];
+  let lastErr: unknown = null;
+  for (const model of models) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        return await geminiOnce<T>(opts, model);
+      } catch (e) {
+        lastErr = e;
+        const msg = String(e);
+        const transient = /Gemini API (429|500|502|503|504)|quota|fetch failed|timed out/i.test(msg);
+        if (!transient) throw e;
+        await new Promise((r) => setTimeout(r, 600 * (attempt + 1)));
+      }
+    }
+  }
+  throw new Error(`Gemini quota exceeded or unavailable: ${String(lastErr)}`);
+}
+
+async function geminiOnce<T>(opts: AIOpts, model: string): Promise<T> {
   const key = Deno.env.get("GEMINI_API_KEY");
   if (!key) throw new Error("GEMINI_API_KEY not set");
   const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
@@ -155,8 +177,7 @@ async function callGemini<T>(opts: AIOpts): Promise<T> {
       },
     }),
   });
-  if (r.status === 429) throw new Error("Gemini quota exceeded");
-  if (!r.ok) throw new Error(`Gemini API ${r.status}: ${await r.text()}`);
+  if (!r.ok) throw new Error(`Gemini API ${r.status}: ${(await r.text()).slice(0, 300)}`);
   const data = await r.json();
   const text = (data.candidates?.[0]?.content?.parts ?? [])
     .filter((p: { text?: string; thought?: boolean }) => p.text && !p.thought)
